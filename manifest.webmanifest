@@ -1,0 +1,18 @@
+{
+  "name": "情绪归处",
+  "short_name": "情绪归处",
+  "description": "看见自己的感受，分清情绪的归属，并练习安全地表达自我。",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#eff7f5",
+  "theme_color": "#eff7f5",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

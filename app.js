@@ -84,7 +84,7 @@ const FLOW_META = {
 const app = document.querySelector("#app");
 
 const state = {
-  view: localStorage.getItem(STORAGE.onboarded) ? "home" : "onboarding",
+  view: "home",
   nav: "home",
   onboardingStep: 0,
   flow: null,
@@ -181,7 +181,11 @@ function brandTopline(extra = "") {
 }
 
 function render() {
+  clearInterval(launcherTimer);
   window.scrollTo({ top: 0, behavior: "instant" });
+  if (state.view === "launcher") return renderLauncher();
+  if (["scan", "dump", "check-settings"].includes(state.view)) return renderCheckPage();
+  if (["today", "weekly", "anchor"].includes(state.view)) return renderSupport();
   if (state.view === "onboarding") return renderOnboarding();
   if (state.view === "flow") return renderFlow();
   if (state.view === "review") return renderReview();
@@ -232,6 +236,7 @@ function renderOnboarding() {
   const page = pages[state.onboardingStep];
   app.innerHTML = `
     <main class="onboarding">
+      <button class="button primary wide" type="button" data-action="onboarding-skip">直接进入 · 查看三个新板块</button>
       <div class="onboarding-art">${page.icon}</div>
       <div class="onboarding-copy">
         <div class="onboarding-step">认识工具 ${state.onboardingStep + 1} / ${pages.length}</div>
@@ -246,44 +251,7 @@ function renderOnboarding() {
 }
 
 function renderHome() {
-  const records = getRecords();
-  const today = new Date().toDateString();
-  const todayCount = records.filter((record) => new Date(record.createdAt).toDateString() === today).length;
-  app.innerHTML = `
-    <main class="page">
-      ${brandTopline(`<span class="progress-label">${todayCount ? `今天已看见 ${todayCount} 次` : "今天也可以慢一点"}</span>`)}
-      <section class="home-intro">
-        <p class="eyebrow">现在这一刻</p>
-        <h1>你更需要哪一种帮助？</h1>
-        <p class="lead">不需要一次想明白。选一个最接近当前状态的入口。</p>
-      </section>
-      <section class="entry-grid">
-        <button class="entry-card self" type="button" data-action="start-flow" data-flow="self">
-          <span class="entry-icon">≈</span>
-          <span class="entry-title">我的身体好像在说什么</span>
-          <span class="entry-copy">从身体感受开始，慢慢辨认自己的情绪和需要。</span>
-          <span class="entry-action">开始向内看 <b>→</b></span>
-        </button>
-        <button class="entry-card ownership" type="button" data-action="start-flow" data-flow="ownership">
-          <span class="entry-icon">◎</span>
-          <span class="entry-title">我又开始担心别人不高兴了</span>
-          <span class="entry-copy">区分事实、脑补和情绪归属，决定是否真的需要行动。</span>
-          <span class="entry-action">开始分辨 <b>→</b></span>
-        </button>
-        <button class="entry-card expression" type="button" data-action="start-flow" data-flow="expression">
-          <span class="entry-icon">◇</span>
-          <span class="entry-title">我想表达，但又想躲起来</span>
-          <span class="entry-copy">确认真实风险，组织想说的话，选择一个可承受的表达台阶。</span>
-          <span class="entry-action">练习出现 <b>→</b></span>
-        </button>
-        <button class="entry-card review" type="button" data-action="open-review">
-          <span class="entry-title">回顾今天</span>
-          <span class="entry-copy">看看什么时候看见了自己，什么时候替别人承担了情绪。</span>
-        </button>
-      </section>
-      <p class="daily-line">看见情绪，不等于必须立刻处理情绪。表达自我，也不必一次暴露全部自己。</p>
-    </main>
-    ${navBar("home")}`;
+  renderDashboard();
 }
 
 function latestOwnershipWithin(minutes = 20) {
@@ -910,6 +878,7 @@ function renderSettings() {
       <p class="eyebrow">由你决定节奏</p>
       <h1>设置</h1>
       <section class="tool-grid">
+        ${renderMoodChart()}
         <article class="setting-card">
           <h3>提示密度</h3>
           <p>详细模式会解释每一步；简洁模式只保留问题与选项。</p>
@@ -989,6 +958,10 @@ function exportData() {
     exportedAt: new Date().toISOString(),
     app: "情绪归处",
     settings: getSettings(),
+    support: getSupport(),
+    launcher: getLauncher(),
+    checkins: getChecks(),
+    moods: getMoods(),
     records: getRecords()
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -1004,6 +977,15 @@ function exportData() {
 function clearData() {
   if (!window.confirm("确定清除当前设备上的全部记录吗？此操作无法撤销。")) return;
   writeJSON(STORAGE.records, []);
+  localStorage.removeItem(SUPPORT_KEY);
+  localStorage.removeItem(LAUNCHER_KEY);
+  localStorage.removeItem(CHECK_KEY);
+  localStorage.removeItem(MOOD_KEY);
+  document.querySelector('.mood-dialog')?.close?.();
+  checkDraft = {};
+  checkResult = null;
+  dumpResult = null;
+  anchorStep = 0;
   showToast("全部记录已清除");
   render();
 }
@@ -1022,6 +1004,12 @@ app.addEventListener("click", (event) => {
   if (!target) return;
   const action = target.dataset.action;
 
+  if (action === "onboarding-skip") {
+    localStorage.setItem(STORAGE.onboarded, "1");
+    state.view = "home";
+    return render();
+  }
+
   if (action === "onboarding-next") {
     if (state.onboardingStep < 2) state.onboardingStep += 1;
     else {
@@ -1038,6 +1026,8 @@ app.addEventListener("click", (event) => {
   }
 
   if (action === "nav") {
+    if (target.dataset.view === "scan") { checkDraft = {}; checkResult = null; }
+    if (target.dataset.view === "dump") dumpResult = null;
     state.view = target.dataset.view;
     state.nav = target.dataset.view;
     return render();
@@ -1103,7 +1093,8 @@ app.addEventListener("input", (event) => {
 });
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).then(registration => registration.update()).catch(() => {}));
 }
 
 render();
+setTimeout(moodReminderTick, 400);

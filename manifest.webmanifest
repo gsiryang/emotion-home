@@ -4,8 +4,8 @@
   "description": "看见自己的感受，分清情绪的归属，并练习安全地表达自我。",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#eff7f5",
-  "theme_color": "#eff7f5",
+  "background_color": "#f5f4ee",
+  "theme_color": "#f5f4ee",
   "lang": "zh-CN",
   "icons": [
     {
@@ -16,3 +16,4 @@
     }
   ]
 }
+

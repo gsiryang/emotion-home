@@ -183,6 +183,7 @@ function brandTopline(extra = "") {
 function render() {
   clearInterval(launcherTimer);
   window.scrollTo({ top: 0, behavior: "instant" });
+  if (state.view === "emotions") return renderEmotions();
   if (state.view === "launcher") return renderLauncher();
   if (["scan", "dump", "check-settings"].includes(state.view)) return renderCheckPage();
   if (["today", "weekly", "anchor"].includes(state.view)) return renderSupport();
@@ -381,7 +382,8 @@ function renderSelfStep() {
         <h1 class="question-title">哪些情绪词有一点接近？</h1>
         <p class="question-help">可以多选。今天的答案以后也可以改变。</p>
       </section>
-      ${chipGroup("emotions", COPY.emotions, d.emotions)}
+      ${emotionButton('帮我找一个更贴近的情绪词', 'open-self')}
+      ${chipGroup("emotions", [...new Set([...COPY.emotions, ...(d.emotions || [])])], d.emotions)}
       <label class="field-label" for="self-event">情绪出现前，最近发生了什么？</label>
       <textarea id="self-event" class="text-area" data-input="event" placeholder="只写最近的一件事，不必写完整故事。">${esc(d.event || "")}</textarea>
       ${flowActions({ disabled: !d.emotions?.length })}`;
@@ -393,7 +395,7 @@ function renderSelfStep() {
         <h1 class="question-title">你可能需要什么？</h1>
         <p class="question-help">识别需要，不等于要求眼前的人立刻满足它。</p>
       </section>
-      ${chipGroup("needs", COPY.needs, d.needs)}
+      ${chipGroup("needs", [...new Set([...COPY.needs, ...(d.needs || [])])], d.needs)}
       ${prompt("同一个需要可以有很多满足方式。需要安全感，不等于必须马上向别人确认关系。")}
       ${flowActions({ disabled: !d.needs?.length })}`;
   }
@@ -446,6 +448,7 @@ function renderOwnershipStep() {
         <p class="question-help">先不猜测对方的内心，只记录言语、动作和时间。</p>
       </section>
       ${chipGroup("facts", COPY.ownershipFacts, d.facts)}
+      ${d.emotionContext ? `<div class="prompt-box"><strong>刚才辨认的感受与需要</strong><p>${esc(d.emotionContext)}</p><p>这是感受线索，不代表已经确认责任或事实。</p></div>` : ''}
       <label class="field-label" for="fact-detail">补充一个具体事实</label>
       <textarea id="fact-detail" class="text-area" data-input="factDetail" placeholder="例如：对方看完消息后没有继续回复。">${esc(d.factDetail || "")}</textarea>
       ${prompt("“对方觉得我很烦”不是事实，因为摄像机拍不到。它可以在下一步作为你的解释被认真记录。")}
@@ -980,6 +983,8 @@ function clearData() {
   localStorage.removeItem(SUPPORT_KEY);
   localStorage.removeItem(LAUNCHER_KEY);
   localStorage.removeItem(CHECK_KEY);
+  dumpUndo = null;
+  emotionExplorer = { origin: 'dump', group: null, page: 0, selected: [], fit: {}, needs: [], own: '' };
   localStorage.removeItem(MOOD_KEY);
   document.querySelector('.mood-dialog')?.close?.();
   checkDraft = {};

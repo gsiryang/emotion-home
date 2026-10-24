@@ -1,7 +1,7 @@
-const CACHE_NAME = "emotion-home-v16";
+const CACHE_NAME = "emotion-home-v17";
 const ASSETS = [
-  "./", "./index.html", "./styles.css?v=16", "./support.js?v=16",
-  "./launcher.js?v=16", "./checkin.js?v=16", "./moods.js?v=16", "./app.js?v=16", "./manifest.webmanifest", "./icon.svg"
+  "./", "./index.html", "./styles.css?v=17", "./support.js?v=17",
+  "./launcher.js?v=17", "./checkin.js?v=17", "./moods.js?v=17", "./emotions.js?v=17", "./app.js?v=17", "./manifest.webmanifest", "./icon.svg"
 ];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
@@ -40,6 +40,7 @@ self.addEventListener("fetch", event => {
     return response;
   })());
 });
+
 
 
 

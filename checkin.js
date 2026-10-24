@@ -38,7 +38,7 @@ function renderDashboard() {
 function renderCheckPage() {
   let body;
   if (state.view === 'check-settings') body = renderMoodSettings();
-  else if (state.view === 'dump') body = renderDump();
+  else if (state.view === 'dump') body = `<div class="dump-sheet">${renderDump()}${dumpExtras()}</div>`;
   else if (checkResult) body = renderCheckResult(checkResult);
   else body = `<p class="eyebrow">30 秒状态检查</p><h1>这几个小时，过得怎么样？</h1><p class="lead">不用判断自己是不是“想太多”。选最接近的情况。</p><div class="scan-questions">${CHECK_QUESTIONS.map(([key,title,options]) => `<fieldset><legend>${title}</legend><div class="scan-options">${options.map((label,i) => `<button class="chip ${checkDraft[key] === i ? 'selected' : ''}" aria-pressed="${checkDraft[key] === i}" data-check="answer" data-key="${key}" data-value="${i}">${label}</button>`).join('')}</div></fieldset>`).join('')}</div>${checkButton('看看我现在需要什么', 'submit', CHECK_QUESTIONS.every(([key]) => Number.isInteger(checkDraft[key])) ? '' : 'disabled', true)}<p class="question-help">颜色是个人负荷提示，不是诊断或安全评估；绿色也不代表必须努力或没有风险。</p>`;
   app.innerHTML = `<main class="page check-page">${brandTopline()}<button class="back-link" data-action="nav" data-view="home">← 所有工具</button>${body}</main>${navBar('home')}`;
@@ -151,6 +151,7 @@ function openCheckLauncher() {
   state.view = 'launcher';
   render();
 }
+
 
 
 

@@ -918,3 +918,19 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .dashboard .compact-tools > .dash-card { height: 108px; min-height: 108px; padding: 12px; }
 }
 
+.emotion-directions, .emotion-exits { display: grid; gap: 10px; margin: 20px 0; }
+.emotion-word-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.emotion-word-grid .chip { text-align: left; padding: 16px; min-height: 96px; }
+.emotion-word-grid strong, .emotion-word-grid small { display: block; }
+.emotion-word-grid small { margin-top: 6px; line-height: 1.7; color: var(--muted); }
+.dump-extra { display: grid; gap: 12px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+.flush-button { border: 1px solid #b7cfd1; border-radius: 14px; color: #31595d; background: #eaf5f4; padding: 14px; min-height: 48px; }
+.flush-overlay { position: fixed; inset: 0; z-index: 200; display: grid; place-content: center; text-align: center; pointer-events: all; background: #f5f4eecc; }
+.flush-bowl { position: relative; font-size: 110px; line-height: 1.2; }
+.flush-paper { position: absolute; top: calc(50% - 115px); left: calc(50% - 35px); width: 70px; padding: 8px; border-radius: 6px; background: white; color: #719798; box-shadow: 0 4px 14px #31595d22; animation: flush-paper .85s ease-in forwards; }
+.flush-water { position: absolute; left: 36%; top: 48%; width: 35px; height: 16px; border: 3px dashed #69b5c3; border-radius: 50%; animation: flush-water .3s linear 3; }
+.dump-flushing { transform-origin: 50% 60%; animation: flush-sheet .85s ease-in forwards; }
+@keyframes flush-paper { from { transform: translateY(-50px) rotate(-12deg) scale(1); } to { transform: translateY(80px) rotate(540deg) scale(0); opacity: 0; } }
+@keyframes flush-water { to { transform: rotate(360deg); } }
+@keyframes flush-sheet { to { transform: rotate(18deg) scale(.05); opacity: 0; } }
+@media(prefers-reduced-motion:reduce) { .dump-flushing, .flush-paper, .flush-water { animation: none; } }
